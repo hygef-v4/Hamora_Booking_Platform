@@ -54,7 +54,7 @@
 - **Java 17** - Ngôn ngữ lập trình chính
 - **Spring Boot 3.4.5** - Framework backend
 - **Spring Security** - Bảo mật và xác thực
-- **Spring Data JPA** - ORM và quản lý database
+- **JDBC** - Quản lý database và kết nối trực tiếp
 - **Thymeleaf** - Template engine
 - **WebSocket** - Chat realtime
 
