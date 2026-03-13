@@ -22,9 +22,9 @@ public class HotelBookingSystemApplication implements CommandLineRunner {
     public void run(String... args) {
         try {
             jdbcTemplate.execute("SELECT 1");
-            System.out.println("✅ JDBC connection test successful.");
+            System.out.println("JDBC connection test successful.");
         } catch (Exception e) {
-            System.err.println("❌ JDBC connection test failed: " + e.getMessage());
+            System.err.println("JDBC connection test failed: " + e.getMessage());
         }
     }
 }
