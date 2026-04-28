@@ -1,0 +1,341 @@
+﻿USE master;
+GO
+
+
+IF EXISTS (SELECT NAME FROM sys.databases WHERE NAME = 'RoomBooking')
+BEGIN
+        ALTER DATABASE RoomBooking SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+        DROP DATABASE RoomBooking;
+END
+GO
+
+
+CREATE DATABASE RoomBooking;
+GO
+
+
+USE RoomBooking;
+GO
+
+
+CREATE TABLE SiteSettings (
+        id INT PRIMARY KEY CHECK (id = 1),
+        site_name NVARCHAR(255) NOT NULL,
+        support_email NVARCHAR(255) NOT NULL,
+        contact_phone NVARCHAR(50),
+        contact_address NVARCHAR(500)
+);
+
+
+CREATE TABLE Users (
+        user_id INT IDENTITY(1,1) PRIMARY KEY,
+        full_name NVARCHAR(100) DEFAULT '',
+        email NVARCHAR(100) UNIQUE NOT NULL,
+        password_hash NVARCHAR(255),
+        phone NVARCHAR(20) DEFAULT '',
+        gender NVARCHAR(10) DEFAULT 'other' CHECK (gender IN ('male', 'female', 'other')),
+        date_of_birth DATE,
+        role NVARCHAR(20) DEFAULT 'CUSTOMER' CHECK (role IN ('CUSTOMER', 'HOTEL_OWNER', 'MODERATOR', 'ADMIN')),
+        is_active BIT DEFAULT 1,
+        avatar_url NVARCHAR(255) DEFAULT '/assets/images/avatar/avatar.jpg',
+        bio NVARCHAR(MAX)
+);
+
+
+CREATE TABLE Banks (
+        bank_id INT IDENTITY(1,1) PRIMARY KEY,
+        bank_name NVARCHAR(100) NOT NULL,
+        bank_code NVARCHAR(10) NOT NULL,
+        logo NVARCHAR(255),
+        icon NVARCHAR(255)
+);
+
+
+CREATE TABLE UserBanks (
+        user_id INT,
+        bank_id INT,
+        bank_number NVARCHAR(16) NOT NULL,
+        user_name NVARCHAR(100) NOT NULL,
+        default_account BIT DEFAULT 1,
+        PRIMARY KEY (user_id, bank_id, bank_number),
+        FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
+        FOREIGN KEY (bank_id) REFERENCES Banks(bank_id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE Tokens (
+        id INT PRIMARY KEY IDENTITY,
+        user_id INT NULL, 
+        token VARCHAR(255) NOT NULL,
+        expiry_date DATETIME NOT NULL,
+        token_type NVARCHAR(255) NOT NULL DEFAULT 'reset password',
+        FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE Locations (
+        location_id INT IDENTITY(1,1) PRIMARY KEY,
+        city_name NVARCHAR(255) UNIQUE NOT NULL,
+        location_image_url NVARCHAR(255)
+);
+
+
+CREATE TABLE Hotels (
+        hotel_id INT IDENTITY(1,1) PRIMARY KEY,
+        host_id INT NOT NULL,
+        hotel_name NVARCHAR(255) NOT NULL,
+        hotel_image_url NVARCHAR(500),
+        address NVARCHAR(MAX) NOT NULL,
+        location_id INT NOT NULL,
+        latitude FLOAT NOT NULL,
+        longitude FLOAT NOT NULL,
+        rating DECIMAL(3,1),
+        status NVARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'pending', 'banned', 'rejected')),
+        description NVARCHAR(MAX),
+        policy NVARCHAR(MAX),
+ban_reason NVARCHAR(50) NULL,
+        FOREIGN KEY (host_id) REFERENCES Users(user_id) ON DELETE CASCADE,
+        FOREIGN KEY (location_id) REFERENCES Locations(location_id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE CancellationPolicies (
+        hotel_id INT PRIMARY KEY,
+        partial_refund_days INT CHECK (partial_refund_days >= 0),                        
+        partial_refund_percent INT CHECK (partial_refund_percent BETWEEN 0 AND 100),
+        no_refund_within_days INT CHECK (no_refund_within_days >= 0),                
+        FOREIGN KEY (hotel_id) REFERENCES Hotels(hotel_id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE Rooms (
+        room_id INT IDENTITY(1,1) PRIMARY KEY,
+        hotel_id INT NOT NULL,                     
+        title NVARCHAR(255) NOT NULL,
+        description NVARCHAR(MAX),
+        price DECIMAL(10, 2) NOT NULL,
+        max_guests INT NOT NULL,
+        status NVARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'booked')),
+        quantity int DEFAULT 1,
+        FOREIGN KEY (hotel_id) REFERENCES Hotels(hotel_id) ON DELETE CASCADE,
+);
+
+
+CREATE TABLE RoomImages (
+        image_id INT IDENTITY(1,1) PRIMARY KEY,
+        room_id INT NOT NULL,
+        image_url NVARCHAR(255),
+        FOREIGN KEY (room_id) REFERENCES Rooms(room_id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE AmenityCategories (
+        category_id INT IDENTITY(1,1) PRIMARY KEY,
+        name NVARCHAR(100) UNIQUE NOT NULL
+);
+
+
+CREATE TABLE Amenities (
+        amenity_id INT PRIMARY KEY IDENTITY(1,1),
+        name NVARCHAR(100) NOT NULL UNIQUE,
+        category_id INT NOT NULL,
+        FOREIGN KEY (category_id) REFERENCES AmenityCategories(category_id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE RoomAmenities (
+        room_id INT,
+        amenity_id INT,
+        PRIMARY KEY (room_id, amenity_id),
+        FOREIGN KEY (room_id) REFERENCES Rooms(room_id) ON DELETE CASCADE,
+        FOREIGN KEY (amenity_id) REFERENCES Amenities(amenity_id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE Favorites (
+        user_id INT,
+        hotel_id INT,
+        PRIMARY KEY (user_id, hotel_id),
+        FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
+        FOREIGN KEY (hotel_id) REFERENCES Hotels(hotel_id) ON DELETE NO ACTION
+);
+
+
+CREATE TABLE Reviews (
+        review_id INT IDENTITY(1,1) PRIMARY KEY,
+        hotel_id INT NOT NULL,
+        reviewer_id INT NOT NULL,
+        rating INT CHECK (rating BETWEEN 1 AND 5),
+        comment NVARCHAR(MAX),
+        is_public BIT DEFAULT 1,
+        created_at DATETIME DEFAULT GETDATE(),
+        FOREIGN KEY (hotel_id) REFERENCES Hotels(hotel_id) ON DELETE CASCADE,
+        FOREIGN KEY (reviewer_id) REFERENCES Users(user_id) ON DELETE NO ACTION
+);
+
+
+CREATE TABLE Replies (
+        reply_id INT IDENTITY(1,1) PRIMARY KEY,
+        review_id INT NOT NULL,
+        replier_id INT NOT NULL,
+        comment NVARCHAR(MAX),
+        is_public BIT DEFAULT 1,
+        created_at DATETIME DEFAULT GETDATE(),
+        FOREIGN KEY (review_id) REFERENCES Reviews(review_id) ON DELETE CASCADE,
+        FOREIGN KEY (replier_id) REFERENCES Users(user_id) ON DELETE NO ACTION
+);
+
+
+CREATE TABLE Reports (
+        report_id INT IDENTITY(1,1) PRIMARY KEY,
+        reporter_id INT NOT NULL,
+        reported_user_id INT NOT NULL,
+        reason NVARCHAR(MAX),
+        status NVARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined')),
+        created_at DATETIME DEFAULT GETDATE(),
+        FOREIGN KEY (reporter_id) REFERENCES Users(user_id),
+        FOREIGN KEY (reported_user_id) REFERENCES Users(user_id)
+);
+
+
+CREATE TABLE Coupons (
+        coupon_id INT PRIMARY KEY IDENTITY(1,1),
+        code NVARCHAR(50) NOT NULL UNIQUE,         
+        type NVARCHAR(20) NOT NULL CHECK (type IN ('percentage', 'fixed')),  
+        amount DECIMAL(10,2) NOT NULL,   
+        valid_from DATE DEFAULT GETDATE(),
+        valid_until DATE NOT NULL,        
+        usage_limit INT DEFAULT NULL,             
+        used_count INT DEFAULT 0,  
+        is_active BIT DEFAULT 1,                
+        min_total_price DECIMAL(10,2) DEFAULT 0 
+);
+
+
+CREATE TABLE UserCoupons (
+        user_id INT,
+        coupon_id INT,
+        PRIMARY KEY (user_id, coupon_id),
+        FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
+        FOREIGN KEY (coupon_id) REFERENCES Coupons(coupon_id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE Bookings (
+        booking_id INT IDENTITY(1,1) PRIMARY KEY,
+        hotel_id INT NOT NULL,
+        customer_id INT NOT NULL,
+        coupon_id INT NULL,
+        check_in DATETIME NOT NULL,
+        check_out DATETIME NOT NULL,
+        total_price DECIMAL(10, 2) NOT NULL,
+        order_code NVARCHAR(100),
+        transaction_no NVARCHAR(15),
+        created_at DATETIME DEFAULT GETDATE(),
+        FOREIGN KEY (hotel_id) REFERENCES Hotels(hotel_id) ON DELETE NO ACTION,
+        FOREIGN KEY (customer_id) REFERENCES Users(user_id) ON DELETE NO ACTION,
+        FOREIGN KEY (coupon_id) REFERENCES Coupons(coupon_id) ON DELETE SET NULL
+);
+
+
+CREATE TABLE BookingUnits (
+        booking_unit_id INT IDENTITY(1,1) PRIMARY KEY,
+        booking_id INT NOT NULL,
+        room_id INT NOT NULL,
+        quantity INT NOT NULL,
+        price DECIMAL(10,2) NOT NULL,
+        refund_amount DECIMAL(10,2),
+        refund_status NVARCHAR(20) DEFAULT 'not_requested' CHECK (refund_status IN ('not_requested', 'pending', 'approved','rejected')),
+        status NVARCHAR(20) DEFAULT 'approved' CHECK (status IN ('pending', 'approved', 'check_in', 'rejected', 'cancelled', 'completed')),
+        FOREIGN KEY (booking_id) REFERENCES Bookings(booking_id) ON DELETE CASCADE,
+        FOREIGN KEY (room_id) REFERENCES Rooms(room_id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE Payments (
+        payment_id INT IDENTITY(1,1) PRIMARY KEY,
+        booking_id INT NOT NULL,
+        amount DECIMAL(10, 2) NOT NULL,
+        payment_method NVARCHAR(50) NOT NULL CHECK (payment_method IN ('VNPAY', 'MOMO', 'CreditCard')),
+        payment_status NVARCHAR(20) NOT NULL CHECK (payment_status IN ('success', 'failed', 'refunded')),
+        paid_at DATETIME DEFAULT GETDATE(),
+        FOREIGN KEY (booking_id) REFERENCES Bookings(booking_id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE Notifications (
+    notification_id INT IDENTITY(1,1) PRIMARY KEY,
+    title NVARCHAR(255) NOT NULL,
+    message NTEXT NOT NULL,
+    notification_type VARCHAR(50) NOT NULL DEFAULT 'system', -- 'booking', 'payment', 'hotel', 'chat', 'system', 'promotion'
+    priority VARCHAR(20) DEFAULT 'normal', -- 'low', 'normal', 'high', 'urgent'
+    action_url NVARCHAR(500), -- URL to redirect when clicked
+    icon VARCHAR(50) DEFAULT 'bi-bell', -- Bootstrap icon class
+    metadata NVARCHAR(MAX), -- JSON for extra data
+    created_at DATETIME2 DEFAULT GETDATE(),
+    expires_at DATETIME2, -- Optional expiration
+    is_global BIT DEFAULT 0
+);
+
+
+CREATE TABLE UserNotifications (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    user_id INT NOT NULL,
+    notification_id INT NOT NULL,
+    is_read BIT DEFAULT 0,
+    read_at DATETIME2,
+    created_at DATETIME2 DEFAULT GETDATE(),
+    FOREIGN KEY (user_id) REFERENCES Users(user_id),
+    FOREIGN KEY (notification_id) REFERENCES Notifications(notification_id)
+);
+-- Indexes for performance
+CREATE INDEX IX_UserNotifications_UserId_IsRead ON UserNotifications(user_id, is_read);
+CREATE INDEX IX_UserNotifications_CreatedAt ON UserNotifications(created_at DESC);
+CREATE INDEX IX_Notifications_Type ON Notifications(notification_type);
+
+
+
+
+CREATE TABLE Messages (
+        message_id INT IDENTITY(1,1) PRIMARY KEY,
+        sender_id INT NOT NULL,
+        receiver_id INT NOT NULL,
+        content NVARCHAR(MAX),
+        image_url NVARCHAR(500),
+        message_type VARCHAR(20) NOT NULL DEFAULT 'text',
+        sent_at DATETIME DEFAULT GETDATE(),
+        FOREIGN KEY (sender_id) REFERENCES Users(user_id) ON DELETE NO ACTION,
+        FOREIGN KEY (receiver_id) REFERENCES Users(user_id) ON DELETE NO ACTION
+);
+GO
+
+
+create trigger insertComment on Reviews after insert as
+begin
+        update Hotels 
+        set rating = (((Hotels.rating * (Comment.count-1)) + inserted.rating) / (Comment.count))
+        from Hotels 
+        join inserted on Hotels.hotel_id = inserted.hotel_id
+        cross apply (
+                select count(*)[count] from Reviews where hotel_id = inserted.hotel_id and is_public = 1
+        ) Comment
+end;
+GO
+
+
+create trigger updateComment on Reviews after update as
+begin
+        update Hotels 
+        set rating = case 
+                when inserted.is_public = 1 then
+                        (((Hotels.rating * (Comment.count)) - deleted.rating + inserted.rating) / (Comment.count))
+                else (((Hotels.rating * (Comment.count+1)) - deleted.rating) / (Comment.count)) 
+        end
+        from Hotels 
+        join deleted on Hotels.hotel_id = deleted.hotel_id
+        join inserted on Hotels.hotel_id = inserted.hotel_id
+        cross apply (
+                select count(*)[count] from Reviews where hotel_id = deleted.hotel_id and is_public = 1
+        ) Comment
+end;
+GO
