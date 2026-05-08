@@ -1,13 +1,16 @@
 # Hamora Booking Platform
 
-[![Demo](https://img.shields.io/badge/Demo-Live-brightgreen)](https://hamora.live)
+[![Demo](https://img.shields.io/badge/Demo-Live-brightgreen)](https://hamora-booking-platform.onrender.com)
 [![Java](https://img.shields.io/badge/Java-17-orange)](https://www.oracle.com/java/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.5-green)](https://spring.io/projects/spring-boot)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 Hamora is a full-stack hotel booking platform built with Spring Boot, designed for real-world marketplace flows across customers, hosts, moderators, and admins. It delivers end-to-end booking, payments, communication, and operations dashboards in one system.
 
-Live demo: https://hamora.live
+🌐 **Live Demo:** [https://hamora-booking-platform.onrender.com](https://hamora-booking-platform.onrender.com)
+
+---
 
 ## Why this project stands out
 
@@ -15,104 +18,150 @@ Live demo: https://hamora.live
 - End-to-end booking pipeline: search, booking, payment, and post-stay reviews.
 - Real-time engagement: WebSocket chat and in-app notifications.
 - Production-style integrations: VNPay payments, Cloudinary media, OAuth2 login, email.
-- Dockerized environment with SQL Server and Redis.
+- Dockerized and deployed on Render with Azure SQL Database.
 
-## Core features
+---
 
-- Customer discovery: search by location/date/guests, filters by price, amenities, and rating.
-- Hotel operations: host onboarding, hotel and room management, media uploads, review handling.
-- Payments and promotions: VNPay integration, coupons, refund workflows.
-- Communication: live chat, notifications, contact/report tools, Dialogflow chatbot.
-- Analytics: role-specific dashboards and revenue/booking insights.
+## Core Features
 
-## Tech stack
+| Feature | Details |
+|---------|---------|
+| 🔍 **Search & Discovery** | Filter by location, date, guests, price, amenities, rating |
+| 🏨 **Hotel Management** | Host onboarding, room setup, media uploads, review handling |
+| 💳 **Payments** | VNPay integration, coupon/promotion system, refund workflows |
+| 💬 **Communication** | Live WebSocket chat, in-app notifications, Dialogflow chatbot |
+| 📊 **Analytics** | Role-specific dashboards with revenue & booking insights |
+| 🔐 **Authentication** | Google OAuth2, Spring Security, role-based access control |
 
-- Backend: Java 17, Spring Boot 3.4.5, Spring Security, JDBC, Thymeleaf, WebSocket
-- Data: Microsoft SQL Server, Redis
-- Integrations: Cloudinary, VNPay, OAuth2, Spring Mail, Dialogflow
-- DevOps: Maven, Docker, SonarQube
+---
 
-## Project structure
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| **Backend** | Java 17, Spring Boot 3.4.5, Spring Security, Spring WebSocket |
+| **View** | Thymeleaf, HTML/CSS/JS |
+| **Database** | Microsoft SQL Server (Azure SQL Database) |
+| **Storage** | Cloudinary |
+| **Payments** | VNPay |
+| **Auth** | Spring OAuth2 Client (Google) |
+| **Email** | Spring Mail (Gmail SMTP) |
+| **Chatbot** | Dialogflow |
+| **DevOps** | Maven, Docker, Render, SonarQube |
+
+---
+
+## Project Structure
 
 ```
 HotelBookingSystem/
 ├── src/main/java/org/swp391/hotelbookingsystem/
-│   ├── config/
-│   ├── controller/
-│   ├── service/
-│   ├── repository/
-│   ├── model/
-│   ├── dto/
-│   ├── handler/
-│   └── filter/
+│   ├── config/           # Security, OAuth2, WebSocket, Cloudinary config
+│   ├── controller/       # MVC Controllers & REST endpoints
+│   ├── service/          # Business logic layer
+│   ├── repository/       # Data access layer (JDBC)
+│   ├── model/            # Entity / domain models
+│   ├── dto/              # Data transfer objects
+│   ├── handler/          # Custom authentication handlers
+│   └── filter/           # Security filters
 ├── src/main/resources/
-│   ├── templates/
-│   ├── static/
+│   ├── templates/        # Thymeleaf HTML templates
+│   ├── static/           # CSS, JS, images
 │   └── application.properties
+├── Dockerfile
+├── docker-compose.yml
 └── pom.xml
 ```
 
-## Run locally
+---
 
-Prerequisites: Java 17+, Maven 3.6+, SQL Server, Redis (optional)
+## Run Locally
 
-1) Clone and enter the app
+**Prerequisites:** Java 17+, Maven 3.6+
+
+### 1. Clone the repository
+
 ```bash
 git clone https://github.com/hygef-v4/Hamora_Booking_Platform.git
 cd Hamora_Booking_Platform/HotelBookingSystem
 ```
 
-2) Configure database in `src/main/resources/application.properties`
-```properties
-spring.datasource.url=jdbc:sqlserver://localhost:1433;databaseName=HotelBooking
-spring.datasource.username=your_username
-spring.datasource.password=your_password
-```
+### 2. Configure environment variables
 
-3) Configure external services (optional but recommended)
-```properties
-# Cloudinary
-cloudinary.cloud-name=your_cloud_name
-cloudinary.api-key=your_api_key
-cloudinary.api-secret=your_api_secret
+Copy the example env file and fill in your values:
 
-# VNPay
-vnpay.tmn-code=your_tmn_code
-vnpay.hash-secret=your_hash_secret
-
-# Email
-spring.mail.username=your_email
-spring.mail.password=your_password
-```
-
-4) Start the application
 ```bash
-mvn spring-boot:run
+cp .env.example .env
 ```
 
-5) Open
-- Local: http://localhost:8080
-- Demo: https://hamora.live
+```env
+SERVER_PORT=8386
+APP_BASE_URL=http://localhost:8386
+
+DB_URL=jdbc:sqlserver://localhost:1433;databaseName=RoomBooking;encrypt=false;trustServerCertificate=true
+DB_USERNAME=sa
+DB_PASSWORD=your_password
+
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+MAIL_USERNAME=your_email@gmail.com
+MAIL_PASSWORD=your_app_password
+
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+```
+
+### 3. Run the application
+
+```bash
+./mvnw spring-boot:run
+```
+
+Open: [http://localhost:8386](http://localhost:8386)
+
+---
 
 ## Run with Docker
 
 ```bash
-docker build -t hamora-hotel-booking .
-docker-compose up -d
+docker compose up --build
 ```
+
+The app will be available at [http://localhost:8386](http://localhost:8386)
+
+> The app connects to Azure SQL Database via `DB_URL` — no local SQL Server container required.
+
+---
+
+## Deployment
+
+The application is deployed on **Render** using Docker:
+
+- **Platform:** [Render](https://render.com)
+- **Database:** Azure SQL Database (Microsoft Azure)
+- **Storage:** Cloudinary
+- **Live URL:** [https://hamora-booking-platform.onrender.com](https://hamora-booking-platform.onrender.com)
+
+---
 
 ## Team
 
-This project was built as part of the SWP391 course by:
+This project was built as part of the SWP391 course:
 
-- Khuat Quang Hung
-- Dao Chi Cuong
-- Vo Chien Thang
-- Vu Hai Nam
-- Vo Minh Tai
+| Name | GitHub |
+|------|--------|
+| Khuat Quang Hung | [@hygef-v4](https://github.com/hygef-v4) |
+| Dao Chi Cuong | — |
+| Vo Chien Thang | — |
+| Vu Hai Nam | — |
+| Vo Minh Tai | — |
+
+---
 
 ## Contact
 
-- Demo: https://hamora.live
-- Email: hungsct1702@gmail.com
-- GitHub: https://github.com/hygef-v4/Hamora_Booking_Platform
+- 🌐 Demo: [https://hamora-booking-platform.onrender.com](https://hamora-booking-platform.onrender.com)
+- 📧 Email: hungsct1702@gmail.com
+- 🐙 GitHub: [https://github.com/hygef-v4/Hamora_Booking_Platform](https://github.com/hygef-v4/Hamora_Booking_Platform)
