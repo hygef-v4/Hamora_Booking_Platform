@@ -153,10 +153,10 @@ This project was built as part of the SWP391 course:
 | Name | GitHub |
 |------|--------|
 | Khuat Quang Hung | [@hygef-v4](https://github.com/hygef-v4) |
-| Dao Chi Cuong | — |
-| Vo Chien Thang | — |
-| Vu Hai Nam | — |
-| Vo Minh Tai | — |
+| Dao Chi Cuong | [@chi-cuongg](https://github.com/chi-cuongg) |
+| Vo Chien Thang | [@ThangVoChien](https://github.com/ThangVoChien) |
+| Vu Hai Nam | [@HNam1315](https://github.com/HNam1315) |
+| Vo Minh Tai | [@tai30052005](https://github.com/tai30052005) |
 
 ---
 
